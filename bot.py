@@ -1,43 +1,55 @@
 import os
 import logging
+import asyncio
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from anthropic import Anthropic
 
 logging.basicConfig(level=logging.INFO)
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 
-# Простой урок для теста (потом заменим на динамику через Anthropic API)
-FIRST_LESSON = """
-📚 Урок 1: Приветствие
+client = Anthropic(api_key=ANTHROPIC_API_KEY)
 
-Salam! (Привет!) — universal, любое время дня
-Sabahınız xeyir! (Доброе утро!)
-Axşamınız xeyir! (Добрый вечер!)
+SYSTEM_PROMPT = (
+    "Ты — Danış, дружелюбный бот-репетитор азербайджанского языка для русскоязычных. "
+    "Ты объясняешь грамматику, даёшь короткие уроки и разговорные фразы. "
+    "Отвечай кратко (3-6 предложений), используй эмодзи умеренно, "
+    "всегда добавляй перевод азербайджанских слов на русский в скобках."
+)
 
-Задание: напиши мне "Salam" в ответ 👇
-"""
+def ask_claude(user_message: str) -> str:
+    response = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=500,
+        system=SYSTEM_PROMPT,
+        messages=[{"role": "user", "content": user_message}],
+    )
+    return response.content[0].text
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "Salam! 👋 Я — Danış, помогу тебе учить азербайджанский.\n\n"
-        "Напиши /lesson чтобы начать первый урок."
+        "Напиши /lesson чтобы начать урок, или просто задай вопрос об азербайджанском языке."
     )
 
 
 async def lesson(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(FIRST_LESSON)
+    await update.message.chat.send_action("typing")
+    prompt = "Дай короткий урок азербайджанского для начинающего: одна тема (например, приветствие, числа, еда — выбери сама), 3-4 фразы с переводом и одно небольшое задание в конце."
+    loop = asyncio.get_event_loop()
+    lesson_text = await loop.run_in_executor(None, ask_claude, prompt)
+    await update.message.reply_text(lesson_text)
 
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text.strip().lower()
-    if text == "salam":
-        await update.message.reply_text("Əla! ✅ Düzgündür (Отлично! Правильно). Molodets!")
-    else:
-        await update.message.reply_text(
-            "Пока я умею совсем немного 🙂 Напиши /lesson чтобы пройти урок."
-        )
+    user_text = update.message.text.strip()
+    await update.message.chat.send_action("typing")
+    loop = asyncio.get_event_loop()
+    reply = await loop.run_in_executor(None, ask_claude, user_text)
+    await update.message.reply_text(reply)
 
 
 def main():
