@@ -1,25 +1,63 @@
 import os
 import logging
-import asyncio
 import psycopg2
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
-from anthropic import Anthropic
 
 logging.basicConfig(level=logging.INFO)
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
-ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
-client = Anthropic(api_key=ANTHROPIC_API_KEY)
-
-SYSTEM_PROMPT = (
-    "Ты — Danış, дружелюбный бот-репетитор азербайджанского языка для русскоязычных. "
-    "Ты объясняешь грамматику, даёшь короткие уроки и разговорные фразы. "
-    "Отвечай кратко (3-6 предложений), используй эмодзи умеренно, "
-    "всегда добавляй перевод азербайджанских слов на русский в скобках."
-)
+LESSONS = [
+    {
+        "title": "Урок 1: Приветствие",
+        "text": (
+            "📚 Урок 1: Приветствие\n\n"
+            "Salam! (Привет!) — universal, любое время дня\n"
+            "Sabahınız xeyir! (Доброе утро!)\n"
+            "Axşamınız xeyir! (Добрый вечер!)\n\n"
+            "Задание: напиши мне \"Salam\" в ответ 👇"
+        ),
+    },
+    {
+        "title": "Урок 2: Числа 1-10",
+        "text": (
+            "📚 Урок 2: Числа 1-10\n\n"
+            "Bir (один), İki (два), Üç (три), Dörd (четыре), Beş (пять)\n"
+            "Altı (шесть), Yeddi (семь), Səkkiz (восемь), Doqquz (девять), On (десять)\n\n"
+            "Задание: напиши мне число 5 по-азербайджански 👇"
+        ),
+    },
+    {
+        "title": "Урок 3: Еда",
+        "text": (
+            "📚 Урок 3: Еда\n\n"
+            "Çörək (хлеб), Su (вода), Ət (мясо), Balıq (рыба)\n"
+            "Çay (чай), Meyvə (фрукты), Dadlıdır! (Вкусно!)\n\n"
+            "Задание: напиши мне \"Dadlıdır\" в ответ 👇"
+        ),
+    },
+    {
+        "title": "Урок 4: Семья",
+        "text": (
+            "📚 Урок 4: Семья\n\n"
+            "Ana (мама), Ata (папа), Bacı (сестра), Qardaş (брат)\n"
+            "Ailə (семья)\n\n"
+            "Задание: напиши мне слово \"мама\" по-азербайджански 👇"
+        ),
+    },
+    {
+        "title": "Урок 5: Основные вопросы",
+        "text": (
+            "📚 Урок 5: Основные вопросы\n\n"
+            "Necəsiniz? (Как дела?)\n"
+            "Bu neçəyədir? (Сколько это стоит?)\n"
+            "Hardadır...? (Где находится...?)\n\n"
+            "Задание: напиши мне \"Necəsiniz?\" в ответ 👇"
+        ),
+    },
+]
 
 
 def get_connection():
@@ -67,7 +105,7 @@ def increment_lessons(user_id: int):
     conn.close()
 
 
-def get_progress(user_id: int):
+def get_progress(user_id: int) -> int:
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("SELECT lessons_completed FROM users WHERE user_id = %s", (user_id,))
@@ -77,35 +115,22 @@ def get_progress(user_id: int):
     return row[0] if row else 0
 
 
-def ask_claude(user_message: str) -> str:
-    response = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=500,
-        system=SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": user_message}],
-    )
-    return response.content[0].text
-
-
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     ensure_user(user.id, user.username or user.first_name)
     await update.message.reply_text(
         "Salam! 👋 Я — Danış, помогу тебе учить азербайджанский.\n\n"
-        "Напиши /lesson чтобы начать урок, /progress чтобы посмотреть свой прогресс, "
-        "или просто задай вопрос об азербайджанском языке."
+        "Напиши /lesson чтобы начать следующий урок, /progress чтобы посмотреть свой прогресс."
     )
 
 
 async def lesson(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     ensure_user(user.id, user.username or user.first_name)
-    await update.message.chat.send_action("typing")
-    prompt = "Дай короткий урок азербайджанского для начинающего: одна тема (например, приветствие, числа, еда — выбери сама), 3-4 фразы с переводом и одно небольшое задание в конце."
-    loop = asyncio.get_event_loop()
-    lesson_text = await loop.run_in_executor(None, ask_claude, prompt)
+    count = get_progress(user.id)
+    current = LESSONS[count % len(LESSONS)]
     increment_lessons(user.id)
-    await update.message.reply_text(lesson_text)
+    await update.message.reply_text(current["text"])
 
 
 async def progress(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -117,11 +142,9 @@ async def progress(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     ensure_user(user.id, user.username or user.first_name)
-    user_text = update.message.text.strip()
-    await update.message.chat.send_action("typing")
-    loop = asyncio.get_event_loop()
-    reply = await loop.run_in_executor(None, ask_claude, user_text)
-    await update.message.reply_text(reply)
+    await update.message.reply_text(
+        "Əla! ✅ Продолжай в том же духе.\n\nНапиши /lesson для следующего урока или /progress чтобы увидеть прогресс."
+    )
 
 
 def main():
