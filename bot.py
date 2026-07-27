@@ -95,9 +95,10 @@ async def start(update:Update,context:ContextTypes.DEFAULT_TYPE):
 async def lesson(update:Update,context:ContextTypes.DEFAULT_TYPE):
     user=update.effective_user
     await update.message.chat.send_action("typing")
-    prompt=f"""
+      
+    
 
-Пользователь уже прошёл {progress} уроков.
+prompt=f""" Пользователь уже прошёл {progress} уроков.
 
 Дай следующий урок азербайджанского языка.
 
