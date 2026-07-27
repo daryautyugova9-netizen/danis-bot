@@ -91,8 +91,7 @@ async def start(update:Update,context:ContextTypes.DEFAULT_TYPE):
         "Напиши /lesson чтобы начать урок, /progress чтобы посмотреть прогресс, "
         "или просто задай вопрос об азербайджанском языке."
     
-
-async def lesson(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def lesson(update:Update,context:ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     ensure_user(user.id, user.username or user.first_name)
     await update.message.chat.send_action("typing")
