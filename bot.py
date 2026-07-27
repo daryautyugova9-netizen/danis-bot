@@ -20,8 +20,7 @@ SYSTEM_PROMPT=(
     "Отвечай кратко (3-6 предложений), используй эмодзи умеренно, "
     "всегда добавляй перевод азербайджанских слов на русский в скобках. "
     "Всегда используй правильную азербайджанскую орфографию. "
-    "Неформальное местоимение — 'sən', а не 'cən'."
-)
+    "Неформальное местоимение — 'sən', а не 'cən'.")
 
 def get_connection():
     return psycopg2.connect(DATABASE_URL)
@@ -34,9 +33,7 @@ def init_db():
             user_id BIGINT PRIMARY KEY,
             username TEXT,
             lessons_completed INTEGER DEFAULT 0,
-            last_active TIMESTAMP DEFAULT NOW()
-        )
-    """)
+            last_active TIMESTAMP DEFAULT NOW()""")
     conn.commit()
     cur.close()
     conn.close()
@@ -60,7 +57,7 @@ def increment_lessons(user_id:int):
         UPDATE users
         SET lessons_completed=lessons_completed+1,last_active=NOW()
         WHERE user_id=%s
-    """,(user_id,))
+    """),(user_id,))
     conn.commit()
     cur.close()
     conn.close()
@@ -89,7 +86,7 @@ async def start(update:Update,context:ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "Salam! 👋 Я — Danış, помогу тебе учить азербайджанский.\n\n"
         "Напиши /lesson чтобы начать урок, /progress чтобы посмотреть прогресс, "
-        "или просто задай вопрос об азербайджанском языке."
+        "или просто задай вопрос об азербайджанском языке.")
     
 async def lesson(update:Update,context:ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
@@ -129,7 +126,7 @@ async def lesson(update:Update,context:ContextTypes.DEFAULT_TYPE):
 async def progress(update:Update,context:ContextTypes.DEFAULT_TYPE):
     user=update.effective_user
     count=get_progress(user.id)
-    await update.message.reply_text(f"📊 Ты прошёл(-а) уроков: {count}")
+    await update.message.reply_text(f"📊 Ты прошёл(-а) уроков:{count}")
 
 async def message_handler(update: Update, context:ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
@@ -137,7 +134,7 @@ async def message_handler(update: Update, context:ContextTypes.DEFAULT_TYPE):
     await update.message.chat.send_action("typing")
     
     user_message = update.message.text
-    print(f"Получено сообщение: {user_message}")  # Это отладочное сообщение!
+    print(f"Получено сообщение:{user_message}") # Это отладочное сообщение!
     
     bot_response = ask_claude(user_message)
     await update.message.reply_text(bot_response)
