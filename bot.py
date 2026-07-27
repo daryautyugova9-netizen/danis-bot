@@ -46,7 +46,7 @@ def ensure_user(user_id:int,username:str):
     cur=conn.cursor()
     cur.execute("""
         INSERT INTO users (user_id, username, last_active)
-        VALUES (%s, %s, NOW())
+        VALUES (%s, %s, NOW()
         ON CONFLICT (user_id) DO UPDATE SET last_active=NOW()
     """,(user_id,username))
     conn.commit()
