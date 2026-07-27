@@ -94,9 +94,41 @@ async def start(update:Update,context:ContextTypes.DEFAULT_TYPE):
 
 async def lesson(update:Update,context:ContextTypes.DEFAULT_TYPE):
     user=update.effective_user
-    ensure_user(user.id,user.username or user.first_name)
     await update.message.chat.send_action("typing")
-    prompt="Дай короткий урок азербайджанского для начинающего: одна тема (выбери сама — приветствие, числа, еда, семья, город, эмоции и т.п.), 3-4 фразы с переводом и одно небольшое задание в конце."
+    prompt=f"""
+
+Пользователь уже прошёл {progress} уроков.
+
+Дай следующий урок азербайджанского языка.
+
+Не повторяй предыдущие темы.
+
+Темы должны идти по порядку:
+
+1. Приветствия
+
+2. Числа
+
+3. Семья
+
+4. Цвета
+
+5. Время
+
+6. Еда
+
+7. Транспорт
+
+8. Покупки
+
+9. Прошедшее время
+
+10. Будущее время
+
+Верни только следующий урок.
+
+"""
+    ensure_user(user.id,user.username or user.first_name)"Дай короткий урок азербайджанского для начинающего: одна тема (выбери сама — приветствие, числа, еда, семья, город, эмоции и т.п.), 3-4 фразы с переводом и одно небольшое задание в конце."
     loop=asyncio.get_event_loop()
     lesson_text=await loop.run_in_executor(None,ask_claude,prompt)
     increment_lessons(user.id)
