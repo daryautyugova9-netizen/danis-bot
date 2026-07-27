@@ -57,7 +57,7 @@ def increment_lessons(user_id:int):
         UPDATE users
         SET lessons_completed=lessons_completed+1,last_active=NOW()
         WHERE user_id=%s
-    """),(user_id,))
+    """,(user_id,)
     conn.commit()
     cur.close()
     conn.close()
@@ -65,18 +65,18 @@ def increment_lessons(user_id:int):
 def get_progress(user_id:int)->int:
     conn=get_connection()
     cur=conn.cursor()
-    cur.execute("SELECT lessons_completed FROM users WHERE user_id=%s",(user_id,))
+    cur.execute("SELECT lessons_completed FROM users WHERE user_id=%s""",(user_id,))
     row=cur.fetchone()
     cur.close()
     conn.close()
-    return row[0] if row else 0
+    return row[0]if row else 0
 
 def ask_claude(user_message:str)->str:
-    response=client.messages.create(
-        model="claude-haiku-4-5-20251001",
+    response=client.messages.creat
+    model="claude-haiku-4-5-20251001",
         max_tokens=500,
         system=SYSTEM_PROMPT,
-        messages=[{"role":"user","content":user_message}],)
+        messages=[{"role":"user","content":user_message}],
     
     return response.content[0].text
 
