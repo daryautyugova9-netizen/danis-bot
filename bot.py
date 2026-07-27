@@ -132,15 +132,17 @@ async def progress(update:Update,context:ContextTypes.DEFAULT_TYPE):
     count=get_progress(user.id)
     await update.message.reply_text(f"📊 Ты прошёл(-а) уроков: {count}")
 
-async def handle_message(update:Update,context:ContextTypes.DEFAULT_TYPE):
-    user=update.effective_user
-    ensure_user(user.id,user.username or user.first_name)
-    user_text=update.message.text.strip()
+async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    ensure_user(user.id, user.username or user.first_name)
     await update.message.chat.send_action("typing")
-    loop = asyncio.get_event_loop()
-    reply=await loop.run_in_executor(None,ask_claude,user_text)
-    await update.message.reply_text(reply)
-
+    
+    user_message = update.message.text
+    print(f"Получено сообщение: {user_message}")  # Это отладочное сообщение!
+    
+    bot_response = ask_claude(user_message)
+    await update.message.reply_text(bot_response)
+```
 def main():
     init_db()
     app=Application.builder().token(BOT_TOKEN).build()
