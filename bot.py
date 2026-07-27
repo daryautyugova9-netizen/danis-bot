@@ -99,7 +99,8 @@ async def lesson(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.chat.send_action("typing")
 
     progress = get_progress(user.id)
-prompt = f"""
+
+    prompt = f"""
 Пользователь уже прошёл {progress} уроков.
 
 Дай следующий урок азербайджанского языка.
@@ -136,8 +137,8 @@ async def handle_message(update:Update,context:ContextTypes.DEFAULT_TYPE):
     user=update.effective_user
     ensure_user(user.id,user.username or user.first_name)
     user_text=update.message.text.strip()
-    await update.message.chat.send_action("typing")
-    loop=asyncio.get_event_loop()
+    await update.message.chat.send_action("typing") 
+    loop = asyncio.get_event_loop
     reply=await loop.run_in_executor(None,ask_claude,user_text)
     await update.message.reply_text(reply)
 
