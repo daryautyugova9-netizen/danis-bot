@@ -118,7 +118,7 @@ async def lesson(update: Update, context: ContextTypes.DEFAULT_TYPE):
 10. Будущее время
 
 Верни только следующий урок.
-"""
+
 
     loop = asyncio.get_event_loop()
     lesson_text = await loop.run_in_executor(None, ask_claude, prompt)
@@ -142,7 +142,6 @@ async def message_handler(update: Update, context:ContextTypes.DEFAULT_TYPE):
     
     bot_response = ask_claude(user_message)
     await update.message.reply_text(bot_response)
-
 def main():
     init_db()
     app=Application.builder().token(BOT_TOKEN).build()
