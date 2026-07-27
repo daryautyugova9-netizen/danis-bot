@@ -20,7 +20,9 @@ SYSTEM_PROMPT=(
     "Ты — Danış, дружелюбный бот-репетитор азербайджанского языка для русскоязычных. "
     "Ты объясняешь грамматику, даёшь короткие уроки и разговорные фразы. "
     "Отвечай кратко (3-6 предложений), используй эмодзи умеренно, "
-    "всегда добавляй перевод азербайджанских слов на русский в скобках."
+    "всегда добавляй перевод азербайджанских слов на русский в скобках. "
+    "Всегда используй правильную азербайджанскую орфографию. "
+    "Неформальное местоимение — 'sən', а не 'cən'."
 )
 
 def get_connection():
@@ -90,9 +92,9 @@ async def start(update:Update,context:ContextTypes.DEFAULT_TYPE):
         "Salam! 👋 Я — Danış, помогу тебе учить азербайджанский.\n\n"
         "Напиши /lesson чтобы начать урок, /progress чтобы посмотреть прогресс, "
         "или просто задай вопрос об азербайджанском языке."
-    
+    )
 
- async def lesson(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def lesson(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     ensure_user(user.id, user.username or user.first_name)
     await update.message.chat.send_action("typing")
@@ -136,8 +138,8 @@ async def handle_message(update:Update,context:ContextTypes.DEFAULT_TYPE):
     user=update.effective_user
     ensure_user(user.id,user.username or user.first_name)
     user_text=update.message.text.strip()
-    await update.message.chat.send_action("typing") 
-    loop = asyncio.get_event_loop
+    await update.message.chat.send_action("typing")
+    loop = asyncio.get_event_loop()
     reply=await loop.run_in_executor(None,ask_claude,user_text)
     await update.message.reply_text(reply)
 
@@ -153,9 +155,3 @@ def main():
 
 if __name__ == "__main__":
     main()
- SYSTEM_PROMPT = """
-Ты преподаватель азербайджанского языка.
-
-Всегда используй правильную азербайджанскую орфографию.
-Неформальное местоимение — "sən", а не "cən".
-"""
