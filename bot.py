@@ -79,8 +79,8 @@ def ask_claude(user_message:str)->str:
         model="claude-haiku-4-5-20251001",
         max_tokens=500,
         system=SYSTEM_PROMPT,
-        messages=[{"role":"user","content":user_message}],
-    )
+        messages=[{"role":"user","content":user_message}],)
+    
     return response.content[0].text
 
 async def start(update:Update,context:ContextTypes.DEFAULT_TYPE):
@@ -90,7 +90,7 @@ async def start(update:Update,context:ContextTypes.DEFAULT_TYPE):
         "Salam! 👋 Я — Danış, помогу тебе учить азербайджанский.\n\n"
         "Напиши /lesson чтобы начать урок, /progress чтобы посмотреть прогресс, "
         "или просто задай вопрос об азербайджанском языке."
-    )
+    
 
 async def lesson(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
@@ -132,7 +132,7 @@ async def progress(update:Update,context:ContextTypes.DEFAULT_TYPE):
     count=get_progress(user.id)
     await update.message.reply_text(f"📊 Ты прошёл(-а) уроков: {count}")
 
-async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def message_handler(update: Update, context:ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     ensure_user(user.id, user.username or user.first_name)
     await update.message.chat.send_action("typing")
@@ -142,7 +142,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     bot_response = ask_claude(user_message)
     await update.message.reply_text(bot_response)
-```
+
 def main():
     init_db()
     app=Application.builder().token(BOT_TOKEN).build()
