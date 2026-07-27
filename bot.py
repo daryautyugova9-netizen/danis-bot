@@ -85,12 +85,12 @@ async def start(update:Update,context:ContextTypes.DEFAULT_TYPE):
     ensure_user(user.id,user.username or user.first_name)
     await update.message.reply_text(
         "Salam! 👋 Я — Danış, помогу тебе учить азербайджанский.\n\n"
-        "Напиши /lesson чтобы начать урок, /progress чтобы посмотреть прогресс, "
+        "Напиши /lesson чтобы начать урок, /progress чтобы посмотреть прогресс,
         "или просто задай вопрос об азербайджанском языке.")
     
 async def lesson(update:Update,context:ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
-    ensure_user(user.id, user.username or user.first_name)
+    ensure_user(user.id,user.username or user.first_name)
     await update.message.chat.send_action("typing")
 
     progress = get_progress(user.id)
@@ -117,20 +117,20 @@ async def lesson(update:Update,context:ContextTypes.DEFAULT_TYPE):
 
 
     loop = asyncio.get_event_loop()
-    lesson_text = await loop.run_in_executor(None, ask_claude, prompt)
+    lesson_text = await loop.run_in_executor(None,ask_claude,prompt
 
     increment_lessons(user.id)
 
-    await update.message.reply_text(lesson_text)
+    await update.message.reply_text(lesson_text
 
 async def progress(update:Update,context:ContextTypes.DEFAULT_TYPE):
     user=update.effective_user
     count=get_progress(user.id)
     await update.message.reply_text(f"📊 Ты прошёл(-а) уроков:{count}")
 
-async def message_handler(update: Update, context:ContextTypes.DEFAULT_TYPE):
+async def message_handler(update:Update,context:ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
-    ensure_user(user.id, user.username or user.first_name)
+    ensure_user(user.id,user.username or user.first_name)
     await update.message.chat.send_action("typing")
     
     user_message = update.message.text
@@ -144,9 +144,9 @@ def main():
     app.add_handler(CommandHandler("start",start))
     app.add_handler(CommandHandler("lesson",lesson))
     app.add_handler(CommandHandler("progress",progress))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND,handle_message))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND,handle_message)
     app.run_polling()
 
 
-if __name__ == "__main__":
+if__name__ =="__main__":
     main()
