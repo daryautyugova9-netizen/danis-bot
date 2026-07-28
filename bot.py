@@ -82,14 +82,26 @@ def get_progress(user_id: int) -> int:
     return row[0] if row else 0
 
 
-def ask_claude(user_message: str) -> str:
+conversation_history = {}  # user_id -> список последних сообщений
+
+
+def ask_claude(user_id: int, user_message: str) -> str:
+    history = conversation_history.get(user_id, [])
+    history.append({"role": "user", "content": user_message})
+    history = history[-10:]  # держим только последние 10 сообщений
+
     response = client.messages.create(
         model="claude-haiku-4-5-20251001",
         max_tokens=500,
         system=SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": user_message}],
+        messages=history,
     )
-    return response.content[0].text
+    reply = response.content[0].text
+
+    history.append({"role": "assistant", "content": reply})
+    conversation_history[user_id] = history
+
+    return reply
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -131,11 +143,11 @@ async def lesson(update: Update, context: ContextTypes.DEFAULT_TYPE):
 """
 
     loop = asyncio.get_event_loop()
-    lesson_text = await loop.run_in_executor(None, ask_claude, prompt)
+    lesson_text = await loop.run_in_executor(None, ask_claude, user.id, prompt)
 
     increment_lessons(user.id)
 
-    await update.message.reply_text(lesson_text)
+    await update.message.reply_text(lesson_text, parse_mode="Markdown")
 
 
 async def progress(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -152,8 +164,8 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_message = update.message.text
     print(f"Получено сообщение:{user_message}")  # Это отладочное сообщение!
 
-    bot_response = ask_claude(user_message)
-    await update.message.reply_text(bot_response)
+    bot_response = ask_claude(user.id, user_message)
+    await update.message.reply_text(bot_response, parse_mode="Markdown")
 
 
 def main():
