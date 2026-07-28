@@ -41,6 +41,15 @@ def init_db():
             last_active TIMESTAMP DEFAULT NOW()
         )
     """)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS messages (
+            id SERIAL PRIMARY KEY,
+            user_id BIGINT,
+            role TEXT,
+            content TEXT,
+            created_at TIMESTAMP DEFAULT NOW()
+        )
+    """)
     conn.commit()
     cur.close()
     conn.close()
@@ -82,13 +91,37 @@ def get_progress(user_id: int) -> int:
     return row[0] if row else 0
 
 
-conversation_history = {}  # user_id -> список последних сообщений
+def get_history(user_id: int, limit: int = 10) -> list:
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT role, content FROM messages
+        WHERE user_id=%s
+        ORDER BY id DESC
+        LIMIT %s
+    """, (user_id, limit))
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    rows.reverse()  # вернуть в хронологическом порядке
+    return [{"role": role, "content": content} for role, content in rows]
+
+
+def save_message(user_id: int, role: str, content: str):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO messages (user_id, role, content)
+        VALUES (%s, %s, %s)
+    """, (user_id, role, content))
+    conn.commit()
+    cur.close()
+    conn.close()
 
 
 def ask_claude(user_id: int, user_message: str) -> str:
-    history = conversation_history.get(user_id, [])
-    history.append({"role": "user", "content": user_message})
-    history = history[-10:]  # держим только последние 10 сообщений
+    save_message(user_id, "user", user_message)
+    history = get_history(user_id, limit=10)
 
     response = client.messages.create(
         model="claude-haiku-4-5-20251001",
@@ -98,8 +131,7 @@ def ask_claude(user_id: int, user_message: str) -> str:
     )
     reply = response.content[0].text
 
-    history.append({"role": "assistant", "content": reply})
-    conversation_history[user_id] = history
+    save_message(user_id, "assistant", reply)
 
     return reply
 
