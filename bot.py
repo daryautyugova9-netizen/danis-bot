@@ -72,11 +72,12 @@ def get_progress(user_id:int)->int:
     return row[0]if row else 0
 
 def ask_claude(user_message:str)->str:
-    response=client.messages.creat
+  response = client.messages.create(
     model="claude-haiku-4-5-20251001",
-        max_tokens=500,
-        system=SYSTEM_PROMPT,
-        messages=[{"role":"user","content":user_message}],
+    max_tokens=500,
+    system=SYSTEM_PROMPT,
+    messages=[{"role": "user", "content": user_message}],)
+ 
     
     return response.content[0].text
 
